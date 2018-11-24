@@ -10,6 +10,9 @@ var bodyParser = require('body-parser');
 var routes = require('./routes/index');
 var users = require('./routes/users');
 
+const { User } = require('./server/models/user');
+const { mongoose } = require('./server/db/mongoose');
+
 var app = express();
 
 // view engine setup
@@ -22,39 +25,47 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname , 'public')));
 
-app.use('/', routes);
-app.use('/users', users);
+app.get('/', (req, res) => {
 
-// catch 404 and forward to error handler
-app.use(function (req, res, next) {
-    var err = new Error('Not Found');
-    err.status = 404;
-    next(err);
-});
+    res.sendFile(path.join(__dirname, "./public/javascripts/Login.html"));
 
-// error handlers
+}, err => res.status(400).send(err));
 
-// development error handler
-// will print stacktrace
-if (app.get('env') === 'development') {
-    app.use(function (err, req, res, next) {
-        res.status(err.status || 500);
-        res.render('error', {
-            message: err.message,
-            error: err
-        });
+app.get('/myAccount', (req, res) => {
+
+    res.sendFile(path.join(__dirname, "./public/javascripts/myAccount.html"));
+
+}, err => res.status(400).send(err));
+
+app.post('/AccInfo', (req, res) => {
+
+    let password = req.body.password;
+    let userInfo = User.findOne({ password }).then(info => {
+       
+        res.render('index', {info});
     });
-}
+});
+    
 
-// production error handler
-// no stacktraces leaked to user
-app.use(function (err, req, res, next) {
-    res.status(err.status || 500);
-    res.render('error', {
-        message: err.message,
-        error: {}
+
+app.post('/Login', (req, res) => {
+
+    console.log(req.body);
+    let user = new User({
+        email: req.body.email,
+        password: req.body.password
+    });
+
+    user.save().then(doc => {
+
+        res.sendFile(path.join(__dirname, "./public/javascripts/Home(Logout).html"));
+
+
+    }, err => {
+        res.status(400).send(err);
+
     });
 });
 
